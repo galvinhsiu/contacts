@@ -11,4 +11,5 @@ Gem::Specification.new do |s|
   s.files = ["LICENSE", "Rakefile", "README", "examples/grab_contacts.rb", "lib/contacts.rb", "lib/contacts/base.rb", "lib/contacts/json_picker.rb", "lib/contacts/gmail.rb", "lib/contacts/aol.rb", "lib/contacts/hotmail.rb", "lib/contacts/plaxo.rb", "lib/contacts/yahoo.rb", "lib/contacts/mailru.rb"]
   s.add_dependency("json", ">= 1.1.1")
   s.add_dependency('gdata_19', '>= 1.1.2')
+  s.add_dependency('nokogiri', '>= 1.4.0')
 end
