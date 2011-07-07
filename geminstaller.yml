@@ -1,9 +1,0 @@
----
-defaults:
-  install_options: --no-ri --no-rdoc
-gems:
-  - name: json
-  - name: gdata_19
-    version: >= 1.1.2
-  - name: nokogiri
-    version: >= 1.4.0
