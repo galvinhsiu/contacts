@@ -12,5 +12,4 @@ Gem::Specification.new do |s|
   s.add_dependency("json", ">= 1.1.1")
   s.add_dependency('gdata_19', '>= 1.1.2')
   s.add_dependency('nokogiri', '>= 1.4.0')
-  s.add_dependency('fastercsv', '>= 1.5.4')
 end

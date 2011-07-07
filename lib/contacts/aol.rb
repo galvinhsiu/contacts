@@ -140,7 +140,7 @@ class Contacts
     def parse(data, options={})
       begin
         @contacts = []
-        FasterCSV.parse(data) do |person|
+        CSV.parse(data) do |person|
           @contacts << ["#{person[0]} #{person[1]}", person[4]] if person[4] && !person[4].empty?
         end
         @contacts
