@@ -102,14 +102,24 @@ class Contacts
     def parse(data, options={})
       @contacts ||= []
       if data =~ /var InitialContacts = (\[.*?\]);/
-        @contacts += Contacts.parse_json($1).select{|contact|!contact["email"].to_s.empty?}.map{|contact|[contact["contactName"], contact["email"]]}
+        @contacts += Contacts.parse_json($1).select{|contact|!contact["email"].to_s.empty?}.map{|contact|[constructName(contact["contactName"]), contact["email"]]}
       elsif data =~ /^\{"response":/
         @contacts += Contacts.parse_json(data)["response"]["ResultSet"]["Contacts"].to_a.select{|contact|!contact["email"].to_s.empty?}.map{|contact|[contact["contactName"], contact["email"]]}
       else
         @contacts
       end
     end
-    
+
+    def constructName(contactName)
+      returnValue = ""
+
+      contactSplitName = contactName.split(",")
+      contactSplitName.reverse_each do |c|
+        returnValue += c.strip
+        returnValue += " "
+      end
+    end
+
   end
 
   TYPES[:yahoo] = Yahoo
