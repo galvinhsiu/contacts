@@ -30,7 +30,7 @@ class Contacts
       elsif cookies == ""
         raise ConnectionError, PROTOCOL_ERROR
       end
-      
+
       data, resp, cookies, forward = get(forward, cookies, LOGIN_URL)
       
       if resp.code_type != Net::HTTPOK
@@ -104,7 +104,7 @@ class Contacts
       if data =~ /var InitialContacts = (\[.*?\]);/
         @contacts += Contacts.parse_json($1).select{|contact|!contact["email"].to_s.empty?}.map{|contact|[constructName(contact["contactName"]), contact["email"]]}
       elsif data =~ /^\{"response":/
-        @contacts += Contacts.parse_json(data)["response"]["ResultSet"]["Contacts"].to_a.select{|contact|!contact["email"].to_s.empty?}.map{|contact|[contact["contactName"], contact["email"]]}
+        @contacts += Contacts.parse_json(data)["response"]["ResultSet"]["Contacts"].to_a.select{|contact|!contact["email"].to_s.empty?}.map{|contact|[constructName(contact["contactName"]), contact["email"]]}
       else
         @contacts
       end
@@ -118,6 +118,8 @@ class Contacts
         returnValue += c.strip
         returnValue += " "
       end
+
+      return returnValue
     end
 
   end
