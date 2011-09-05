@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 class Contacts
   class Hotmail < Base
     URL                 = "https://login.live.com/login.srf?id=2"
@@ -45,6 +47,7 @@ class Contacts
         data, resp, cookies, forward, old_url = get(forward, cookies, old_url) + [forward]
       end
 
+
       @domain = URI.parse(old_url).host
       @cookies = cookies
     rescue AuthenticationError => m
@@ -57,52 +60,24 @@ class Contacts
 
     def contacts(options = {})
       if connected?
-        @contacts = []
-        build_contacts = []
-        go = true
+        in_the_loop = true
         index = 0
+        @contacts = []
 
-        while(go) do
-          go = false
+        while in_the_loop do
+          url = URI.parse(get_contact_list_url(index))
+          http = open_http(url)
+          resp, data = http.get(get_contact_list_url(index), "Cookie" => @cookies)
 
-          data, resp, cookies, forward = get( get_contact_list_url(index), @cookies )
-
-          email_match_text_beginning = Regexp.escape("http://m.mail.live.com/?rru=compose&amp;to=")
-          email_match_text_end = Regexp.escape("&amp;")
-
-          raw_html = resp.body.split("
-").grep(/(?:e|dn)lk[0-9]+/)
-          raw_html.inject(-1) do |memo, row|
-            c_info = row.match(/(e|dn)lk([0-9])+/)
-
-            # Same contact, or different?
-            build_contacts << [] if memo != c_info[2]
-
-            # Grab info
-            case c_info[1]
-              when "e" # Email
-                build_contacts.last[1] = row.match(/#{email_match_text_beginning}(.*)#{email_match_text_end}/)[1]
-              when "dn" # Name
-                build_contacts.last[0] = row.match(/<a[^>]*>(.+)<\/a>/)[1]
-            end
-
-            # Set memo to contact id
-            c_info[2]
+          if resp.code_type != Net::HTTPOK
+            raise ConnectionError, self.class.const_get(:PROTOCOL_ERROR)
           end
 
-          go = resp.body.include?("ContactList_next")
+          @contacts += contacts_from_page data
+          in_the_loop = data.match(/ContactList_next/)
           index += 1
         end
-
-        build_contacts.each do |contact|
-          unless contact[1].nil?
-            # Only return contacts with email addresses
-            contact[1] = CGI::unescape(contact[1])
-            @contacts << contact
-          end
-        end
-
-        return @contacts
+        return @contacts.select{|contact| contact[1].to_s != ''}
       end
     end
 
@@ -111,6 +86,28 @@ class Contacts
     end
 
     private
+
+    def contacts_from_page page
+      @html = Nokogiri::HTML page
+      contacts = @html.css('tr td:last-child div a').
+        map {|link| parse_row link.attribute("id").to_s.sub('elk', '')}
+    end
+
+    def parse_row row_number
+      [parse_name_by_row(row_number), parse_email_by_row(row_number)]
+    end
+
+    def parse_email_by_row row_number
+      email_from_hotmail_url(@html.css("a#elk"+row_number).attribute('href').value)
+    end
+
+    def parse_name_by_row row_number
+      @html.css("a#dnlk"+row_number).text
+    end
+
+    def email_from_hotmail_url url
+      CGI::unescape CGI::unescape url.match(/to=(.*)&ru/)[1]
+    end
 
     TYPES[:hotmail] = Hotmail
   end
