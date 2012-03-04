@@ -68,6 +68,8 @@ class Contacts
           url = URI.parse(get_contact_list_url(index))
           http = open_http(url)
           resp, data = http.get(get_contact_list_url(index), "Cookie" => @cookies)
+          
+          data.force_encoding('ISO-8859-1')
 
           if resp.code_type != Net::HTTPOK
             raise ConnectionError, self.class.const_get(:PROTOCOL_ERROR)
